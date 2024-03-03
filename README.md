@@ -2,7 +2,6 @@
 Data Source: https://www.ncdc.noaa.gov/stormevents/
 
 Motivation: I had difficulties trying to obtain the API for NOAA's storm events data, so I created my own.
-<hr>
 
 ## Problem Statement
 Conventionally, to obtain storm events data anyone can just go to the [NCDC NOAA's website](https://www.ncdc.noaa.gov/stormevents/) and manually specify the parameters. However, this poses several problems:
@@ -19,7 +18,6 @@ Conventionally, to obtain storm events data anyone can just go to the [NCDC NOAA
         <h4>Takes time away from doing actual analysis work</h4>
     </li>
 </ul>
-<hr>
 
 ## Solution
 Therefore, to solve this, I wrote a Python code that not only can retrieve the storm events data but also pre-process data to emulate the storm events summary table.
@@ -78,3 +76,11 @@ Therefore, to solve this, I wrote a Python code that not only can retrieve the s
             </ol>
     </li>
 </ol>
+
+## Sources
+<ul>
+<li>US States and Counties list: <a href = "https://gist.github.com/vitalii-z8i/">vitalii-z8i</a></li>
+<li>US States FIPS code: I manually coded them from <a href = "https://www.ncdc.noaa.gov/stormevents/">NCDC NOAA's storm events database</a></li>
+</ul>
+
+
