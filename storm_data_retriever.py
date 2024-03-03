@@ -7,6 +7,8 @@ import http.client
 from urllib.request import urlretrieve
 import requests
 
+import time
+
 
 class search_storm_data:
     """
@@ -23,9 +25,9 @@ class search_storm_data:
 
     Methods
     -------
-    check_content():
+    check_url_content():
         Print the content of the retrieved url.
-    check_status():
+    check_http_status():
         Print the HTTP status of the GET request.
     get_storm_data():
         Decode the response from the GET request to a text file and return it as a pandas dataframe.
@@ -66,9 +68,13 @@ class search_storm_data:
         self.response = requests.get(self.url, params=self.payload_str)
 
 
-    def check_content(self):
+    def check_url_content(self) -> None:
         """
         Print the content of the retrieved url.
+
+        Returns
+        -------
+        None
         """
 
         endpoint = self.url + "?" + self.payload_str
@@ -78,9 +84,13 @@ class search_storm_data:
             print(f"{name}: {value}")
 
 
-    def check_status(self):
+    def check_http_status(self) -> None:
         """
         Print the HTTP status of the GET request.
+
+        Returns
+        -------
+        None
         """
 
         print(date.strftime("%B %d, %Y"))
@@ -123,7 +133,7 @@ class search_storm_data:
 
         else:
             # check response status if there is an error in data query
-            self.check_status()
+            print(self.check_http_status())
 
 
 class get_periodical_storm_events_data:
@@ -141,6 +151,8 @@ class get_periodical_storm_events_data:
     -------
     get_annual_storm_data():
         Returns the annual storm events data.
+    save_annual_storm_data():
+        Query the annual storm data and save the annual storm data in CSV format.
     """
 
     def __init__(self, year: int, state: str):
@@ -154,7 +166,6 @@ class get_periodical_storm_events_data:
         state : str
             US State in FIPS%2STATENAME format e.g. 1%2CALABAMA
         """
-
         self.year = year
         self.state = state
         self.noaa_statefips = pd.read_json("reference_data/noaa_statefips.json")
@@ -170,7 +181,6 @@ class get_periodical_storm_events_data:
         data : pandas dataframe
             The queried annual storm events data
         """
-
         date = datetime.datetime(year = self.year, month = 1, day = 1)
         state_fips = self.noaa_statefips[self.noaa_statefips["state_area"] == self.state]["statefips"].values[0]
 
@@ -188,7 +198,7 @@ class get_periodical_storm_events_data:
 
         return data.reset_index(drop = True)
 
-    def save_annual_storm_data(self, folder = "./"):
+    def save_annual_storm_data(self, folder = "./") -> None:
         """
         Query the annual storm data and save the annual storm data in CSV format.
 
@@ -196,9 +206,51 @@ class get_periodical_storm_events_data:
         ----------
         folder : str, optional
             The folder to store the saved csv data. Saved in the main directory as default.
+        Returns
+        -------
+        None
         """
-
         filename = f"{folder}{self.state}_storm_events_{self.year}.csv"
 
+        tic = time.perf_counter()
+
         data = self.get_annual_storm_data()
-        data.to_csv(filename, index=False)
+        data.to_csv(filename, index = False)
+
+        toc = time.perf_counter()
+        print(f"\nDownloaded the {self.state} {self.year} data in {((toc - tic) / 60):0.1f} minutes\n")
+
+class get_all_states_data:
+    """
+    This class gets the periodical storm events data for all States.
+    WARNING: can take forever.
+
+    Methods
+    -------
+    get_annual data():
+        This method loops through annual storm events data from all states from a given list of year(s).
+    """
+    def get_annual_data(self, years: list[int], folder = "./"):
+        """
+        This method loops through annual storm events data from all states from a given list of year(s).
+        Then the annual data is saved in a specified folder. It also tells how long it takes to query the annual data from a given state.
+
+        Parameters
+        ----------
+        years : list
+            List all the year(s) to be queried.
+            RECOMMENDATION: query 1 year at a time e.g. [2008] to prevent large files.
+        folder : str, optional
+            The folder to store the saved csv data. Saved in the main directory as default.
+
+        Returns
+        -------
+        None
+        """
+        # load an array of states from the reference file
+        states = pd.read_json("reference_data/counties_list.json")["State"].unique()
+
+        for year in years:
+            for state in states:
+                print(f"Getting {state} data from {year}\n")
+                get_periodical_storm_events_data(year = year, state = state).save_annual_storm_data(folder = folder)
