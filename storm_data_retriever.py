@@ -249,8 +249,19 @@ class get_all_states_data:
         """
         # load an array of states from the reference file
         states = pd.read_json("reference_data/counties_list.json")["State"].unique()
+        time_taken_lst = []
 
-        for year in years:
-            for i, state in enumerate(states):
-                print(f"Getting {state} ({i + 1}/ {len(states)}) data from {year}\n")
+        for i, year in enumerate(years):
+            for j, state in enumerate(states):
+                tic = time.perf_counter()
+
+                print(f"Getting {state} ({j + 1}/ {len(states)}) data from {year} ({j + 1}/ {len(years)})\n")
                 get_periodical_storm_events_data(year = year, state = state).save_annual_storm_data(folder = folder)
+
+                toc = time.perf_counter()
+
+                time_taken_lst.append(toc - tic)
+
+                average_time = sum(time_taken_lst) / len(time_taken_lst)
+                estimated_time_seconds = (average_time * ((len(states) - j - 1) + (len(states) * len(years) - i - 1)))
+                print(f"\nEstimated time left before completion {(estimated_time_seconds / 60): 0.1f} minutes or {(estimated_time_seconds / 3600): 0.1f} hours")
