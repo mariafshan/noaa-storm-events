@@ -157,7 +157,6 @@ class get_periodical_storm_events_data:
 
         self.year = year
         self.state = state
-        # self.counties_list = pd.read_json("reference_data/counties_list.json")
         self.noaa_statefips = pd.read_json("reference_data/noaa_statefips.json")
 
 
