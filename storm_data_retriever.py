@@ -251,6 +251,6 @@ class get_all_states_data:
         states = pd.read_json("reference_data/counties_list.json")["State"].unique()
 
         for year in years:
-            for state in states:
-                print(f"Getting {state} data from {year}\n")
+            for i, state in enumerate(states):
+                print(f"Getting {state} ({i + 1}/ {len(states)}) data from {year}\n")
                 get_periodical_storm_events_data(year = year, state = state).save_annual_storm_data(folder = folder)
