@@ -95,7 +95,7 @@ class search_storm_data:
 
         print(date.strftime("%B %d, %Y"))
         print("=============HTTP STATUS=============")
-        print(f"HTTP STATUS {self.response.status_code}: {http.client.responses[200]}")
+        print(f"HTTP STATUS {self.response.status_code}: {http.client.responses[self.response.status_code]}")
         print(f"URL: {self.response.url}\n")
 
         print("=============URL PARAMETERS=============")
@@ -117,23 +117,15 @@ class search_storm_data:
             date : Pandas Dataframe
                 Empty pandas dataframe
         """
-
-        if self.response.status_code == 200:
-            # returns pandas dataframe if the response status is OK
-
-            response_text_file = self.response.content.decode('UTF-8')
-            if len(response_text_file) > 0: # check if the raw text file is empty or not
-                data = pd.read_csv(StringIO(response_text_file), sep=",")
-                if data.shape[0] == 500: # gives warning if the data is exactly 500 rows
-                    warnings.warn(f'{self.date} DATA IS EXACTLY 500 ROWS')
-                return data
-            else:
-                # returns empty pandas dataframe if the text file is empty
-                return pd.DataFrame()
-
+        response_text_file = self.response.content.decode('UTF-8')
+        if len(response_text_file) > 0: # check if the raw text file is empty or not
+            data = pd.read_csv(StringIO(response_text_file), sep=",")
+            if data.shape[0] == 500: # gives warning if the data is exactly 500 rows
+                warnings.warn(f'{self.date} DATA IS EXACTLY 500 ROWS')
+            return data
         else:
-            # check response status if there is an error in data query
-            print(self.check_http_status())
+            # returns empty pandas dataframe if the text file is empty
+            return pd.DataFrame()
 
 
 class get_periodical_storm_events_data:
@@ -174,7 +166,7 @@ class get_periodical_storm_events_data:
     def get_annual_storm_data(self):
         """
         Returns the annual storm events data.
-        Loops the get_storm_data method to obtain the concatenated daily data.
+        Loops the get_storm_data method to obtain the concatenated daily data. Checks the HTTP status code for every month in the process.
 
         Returns
         -------
@@ -187,10 +179,20 @@ class get_periodical_storm_events_data:
         data = pd.DataFrame()
         pre_month = 0
 
+
         while (date < datetime.datetime(year = self.year, month = 12, day = 31)):
             # loop and concatenate daily data until the annual data is obtained
             if date.strftime("%m") != pre_month:
                 print(f"...retrieving {self.state} data from {date.strftime('%B %Y')}...")
+                monthly_http_status_code =  search_storm_data(date = date, state = state_fips)
+
+                while monthly_http_status_code.response.status_code != 200: # check if database is ready. checked every month to reduce query time.
+                    print("HTTP status code is not ready for query, retrying in 5 seconds...")
+                    time.sleep(5)
+                    monthly_http_status_code = search_storm_data(date = date, state=state_fips)
+                    print(f"HTTP STATUS {monthly_http_status_code.response.status_code}: {http.client.responses[monthly_http_status_code.response.status_code]}")
+
+                print(f"HTTP STATUS {monthly_http_status_code.response.status_code}: {http.client.responses[monthly_http_status_code.response.status_code]}")
                 pre_month = date.strftime("%m")
 
             data = pd.concat([data, search_storm_data(date = date, state = state_fips).get_storm_data()])
