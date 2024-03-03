@@ -143,7 +143,7 @@ class get_periodical_storm_events_data:
         Returns the annual storm events data.
     """
 
-    def __init__(self, year, state):
+    def __init__(self, year: int, state: str):
         """
         Constructs all the necessary attributes to obtain the annual storm evebts data.
 
@@ -157,6 +157,8 @@ class get_periodical_storm_events_data:
 
         self.year = year
         self.state = state
+        # self.counties_list = pd.read_json("reference_data/counties_list.json")
+        self.noaa_statefips = pd.read_json("reference_data/noaa_statefips.json")
 
 
     def get_annual_storm_data(self):
@@ -171,19 +173,33 @@ class get_periodical_storm_events_data:
         """
 
         date = datetime.datetime(year = self.year, month = 1, day = 1)
+        state_fips = self.noaa_statefips[self.noaa_statefips["state_area"] == self.state]["statefips"].values[0]
 
-        print(f"...retrieving data from {date.strftime('%B %Y')}...")
-        data = search_storm_data(date = date, state = self.state).get_storm_data()
-        pre_month = date.strftime("%m")
+        data = pd.DataFrame()
+        pre_month = 0
 
-        while (date < datetime.datetime(year = self.year, month = 12, day = 31)):
+        while (date < datetime.datetime(year = self.year, month = 1, day = 31)):
             # loop and concatenate daily data until the annual data is obtained
-
-            date += datetime.timedelta(days = 1)
             if date.strftime("%m") != pre_month:
-                print(f"...retrieving data from {date.strftime('%B %Y')}...")
+                print(f"...retrieving {self.state} data from {date.strftime('%B %Y')}...")
                 pre_month = date.strftime("%m")
 
-            data = pd.concat([data, search_storm_data(date = date, state = self.state).get_storm_data()])
+            data = pd.concat([data, search_storm_data(date = date, state = state_fips).get_storm_data()])
+            date += datetime.timedelta(days=1)
 
         return data.reset_index(drop = True)
+
+    def save_annual_storm_data(self, folder = "./"):
+        """
+        Query the annual storm data and save the annual storm data in CSV format.
+
+        Parameters
+        ----------
+        folder : str, optional
+            The folder to store the saved csv data. Saved in the main directory as default.
+        """
+
+        filename = f"{folder}{self.state}_storm_events_{self.year}.csv"
+
+        data = self.get_annual_storm_data()
+        data.to_csv(filename, index=False)
