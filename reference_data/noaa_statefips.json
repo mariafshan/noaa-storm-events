@@ -1,0 +1,274 @@
+[
+  {
+    "state_area": "ALABAMA",
+    "statefips": "1%2CALABAMA"
+  },
+  {
+    "state_area": "ALASKA",
+    "statefips": "2%2CALASKA"
+  },
+  {
+    "state_area": "ARIZONA",
+    "statefips": "4%2CARIZONA"
+  },
+  {
+    "state_area": "ARKANSAS",
+    "statefips": "5%2CARKANSAS"
+  },
+  {
+    "state_area": "CALIFORNIA",
+    "statefips": "6%2CCALIFORNIA"
+  },
+  {
+    "state_area": "COLORADO",
+    "statefips": "8%2CCOLORADO"
+  },
+  {
+    "state_area": "CONNECTICUT",
+    "statefips": "9%2CCONNECTICUT"
+  },
+  {
+    "state_area": "DELAWARE",
+    "statefips": "10%2CDELAWARE"
+  },
+  {
+    "state_area": "DISTRICT OF COLUMBIA",
+    "statefips": "11%2CDISTRICT+OF+COLUMBIA"
+  },
+  {
+    "state_area": "FLORIDA",
+    "statefips": "12%2CFLORIDA"
+  },
+  {
+    "state_area": "GEORGIA",
+    "statefips": "13%2CGEORGIA"
+  },
+  {
+    "state_area": "HAWAII",
+    "statefips": "15%2CHAWAII"
+  },
+  {
+    "state_area": "IDAHO",
+    "statefips": "16%2CIDAHO"
+  },
+  {
+    "state_area": "ILLINOIS",
+    "statefips": "17%2CILLINOIS"
+  },
+  {
+    "state_area": "INDIANA",
+    "statefips": "18%2CINDIANA"
+  },
+  {
+    "state_area": "IOWA",
+    "statefips": "19%2CIOWA"
+  },
+  {
+    "state_area": "KANSAS",
+    "statefips": "20%2CKANSAS"
+  },
+  {
+    "state_area": "KENTUCKY",
+    "statefips": "21%2CKENTUCKY"
+  },
+  {
+    "state_area": "LOUISIANA",
+    "statefips": "22%2CLOUISIANA"
+  },
+  {
+    "state_area": "MAINE",
+    "statefips": "23%2CMAINE"
+  },
+  {
+    "state_area": "MARYLAND",
+    "statefips": "24%2CMARYLAND"
+  },
+  {
+    "state_area": "MASSACHUSETTS",
+    "statefips": "25%2CMASSACHUSETTS"
+  },
+  {
+    "state_area": "MICHIGAN",
+    "statefips": "26%2CMICHIGAN"
+  },
+  {
+    "state_area": "MINNESOTA",
+    "statefips": "27%2CMINNESOTA"
+  },
+  {
+    "state_area": "MISSISSIPPI",
+    "statefips": "28%2CMISSISSIPPI"
+  },
+  {
+    "state_area": "MISSOURI",
+    "statefips": "29%2CMISSOURI"
+  },
+  {
+    "state_area": "MONTANA",
+    "statefips": "30%2CMONTANA"
+  },
+  {
+    "state_area": "NEBRASKA",
+    "statefips": "31%2CNEBRASKA"
+  },
+  {
+    "state_area": "NEVADA",
+    "statefips": "32%2CNEVADA"
+  },
+  {
+    "state_area": "NEW HAMPSHIRE",
+    "statefips": "33%2CNEW+HAMPSHIRE"
+  },
+  {
+    "state_area": "NEW JERSEY",
+    "statefips": "34%2CNEW+JERSEY"
+  },
+  {
+    "state_area": "NEW MEXICO",
+    "statefips": "35%2CNEW+MEXICO"
+  },
+  {
+    "state_area": "NEW YORK",
+    "statefips": "36%2CNEW+YORK"
+  },
+  {
+    "state_area": "NORTH CAROLINA",
+    "statefips": "37%2CNORTH+CAROLINA"
+  },
+  {
+    "state_area": "NORTH DAKOTA",
+    "statefips": "38%2CNORTH+DAKOTA"
+  },
+  {
+    "state_area": "OHIO",
+    "statefips": "39%2COHIO"
+  },
+  {
+    "state_area": "OKLAHOMA",
+    "statefips": "40%2COKLAHOMA"
+  },
+  {
+    "state_area": "OREGON",
+    "statefips": "41%2COREGON"
+  },
+  {
+    "state_area": "PENNSYLVANIA",
+    "statefips": "42%2CPENNSYLVANIA"
+  },
+  {
+    "state_area": "RHODE ISLAND",
+    "statefips": "44%2CRHODE+ISLAND"
+  },
+  {
+    "state_area": "SOUTH CAROLINA",
+    "statefips": "45%2CSOUTH+CAROLINA"
+  },
+  {
+    "state_area": "SOUTH DAKOTA",
+    "statefips": "46%2CSOUTH+DAKOTA"
+  },
+  {
+    "state_area": "TENNESSEE",
+    "statefips": "47%2CTENNESSEE"
+  },
+  {
+    "state_area": "TEXAS",
+    "statefips": "48%2CTEXAS"
+  },
+  {
+    "state_area": "UTAH",
+    "statefips": "49%2CUTAH"
+  },
+  {
+    "state_area": "VERMONT",
+    "statefips": "50%2CVERMONT"
+  },
+  {
+    "state_area": "VIRGNIA",
+    "statefips": "51%2CVIRGINIA"
+  },
+  {
+    "state_area": "WASHINGTON",
+    "statefips": "53%2CWASHINGTON"
+  },
+  {
+    "state_area": "WEST VIRGINIA",
+    "statefips": "54%2CWEST+VIRGINIA"
+  },
+  {
+    "state_area": "WISCONSIN",
+    "statefips": "55%2CWISCONSIN"
+  },
+  {
+    "state_area": "WYOMING",
+    "statefips": "56%2CWYOMING"
+  },
+  {
+    "state_area": "LAKE ST CLAIR",
+    "statefips": "81%2CLAKE+ST+CLAIR"
+  },
+  {
+    "state_area": "HAWAII WATERS",
+    "statefips": "84%2CHAWAII+WATERS"
+  },
+  {
+    "state_area": "GULF OF MEXICO",
+    "statefips": "85%2CGULF+OF+MEXICO"
+  },
+  {
+    "state_area": "E PACIFIC",
+    "statefips": "86%2CE+PACIFIC"
+  },
+  {
+    "state_area": "ATLANTIC SOUTH",
+    "statefips": "87%2CATLANTIC+SOUTH"
+  },
+  {
+    "state_area": "ATLANTIC NORTH",
+    "statefips": "88%2CATLANTIC+NORTH"
+  },
+  {
+    "state_area": "GULF OF ALASKA",
+    "statefips": "89%2CGULF+OF+ALASKA"
+  },
+  {
+    "state_area": "LAKE HURON",
+    "statefips": "90%2CLAKE+HURON"
+  },
+  {
+    "state_area": "LAKE MICHIGAN",
+    "statefips": "91%2CLAKE+MICHIGAN"
+  },
+  {
+    "state_area": "LAKE SUPERIOR",
+    "statefips": "92%2CLAKE+SUPERIOR"
+  },
+  {
+    "state_area": "ST LAWRENCE",
+    "statefips": "93%2CST+LAWRENCE+R"
+  },
+  {
+    "state_area": "LAKE ONTARIO",
+    "statefips": "94%2CLAKE+ONTARIO"
+  },
+  {
+    "state_area": "LAKE ERIE",
+    "statefips": "95%2CLAKE+ERIE"
+  },
+  {
+    "state_area": "VIRGIN ISLANDS",
+    "statefips": "96%2CVIRGIN+ISLANDS"
+  },
+  {
+    "state_area": "AMERICAN SAMOA",
+    "statefips": "97%2CAMERICAN+SAMOA"
+  },
+  {
+    "state_area": "GUAM",
+    "statefips": "98%2CGUAM"
+  },
+  {
+    "state_area": "PUERTO RICO",
+    "statefips": "99%2CPUERTO+RICO"
+  }
+]
