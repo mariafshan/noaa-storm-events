@@ -1,4 +1,4 @@
-# Query and Transform Storm Events Data from National Centers for Environmental Information
+# Query and Transform Storm Events Data from National Oceanic and Atmospheric Administration
 Data Source: https://www.ncdc.noaa.gov/stormevents/
 
 Motivation: I had difficulties trying to obtain the API for NOAA's storm events data, so I created my own.
