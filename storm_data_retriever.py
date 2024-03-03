@@ -178,7 +178,7 @@ class get_periodical_storm_events_data:
         data = pd.DataFrame()
         pre_month = 0
 
-        while (date < datetime.datetime(year = self.year, month = 1, day = 31)):
+        while (date < datetime.datetime(year = self.year, month = 12, day = 31)):
             # loop and concatenate daily data until the annual data is obtained
             if date.strftime("%m") != pre_month:
                 print(f"...retrieving {self.state} data from {date.strftime('%B %Y')}...")
