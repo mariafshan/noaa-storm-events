@@ -220,7 +220,7 @@ class get_periodical_storm_events_data:
         data.to_csv(filename, index = False)
 
         toc = time.perf_counter()
-        print(f"\nDownloaded the {self.state} {self.year} data in {((toc - tic) / 60):0.1f} minutes\n")
+        print(f"\nDownloaded {self.state} {self.year} data in {((toc - tic) / 60):0.1f} minutes")
 
 class get_all_states_data:
     """
@@ -266,4 +266,4 @@ class get_all_states_data:
 
                 average_time = sum(time_taken_lst) / len(time_taken_lst)
                 estimated_time_seconds = (average_time * ((len(states) - j - 1) + (len(states) * len(years) - i - 1)))
-                print(f"\nEstimated time left before completion {(estimated_time_seconds / 60): 0.1f} minutes or {(estimated_time_seconds / 3600): 0.1f} hours")
+                print(f"\nEstimated time left before completion {(estimated_time_seconds / 60): 0.1f} minutes or {(estimated_time_seconds / 3600): 0.1f} hours\n")
