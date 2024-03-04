@@ -406,5 +406,5 @@ class save_storm_data:
                 time_taken_lst.append(toc - tic)
 
                 average_time = sum(time_taken_lst) / len(time_taken_lst)
-                estimated_time_seconds = (average_time * ((len(states) - j - 1) + (len(states) * len(years) - i - 1)))
+                estimated_time_seconds = (average_time * ((len(states) - j - 1) + (len(states) * (len(years) - i - 1))))
                 print(f"\nEstimated time left before completion {(estimated_time_seconds / 60): 0.1f} minutes or {(estimated_time_seconds / 3600): 0.1f} hours\n")
