@@ -1,4 +1,5 @@
 import warnings
+import calendar
 import datetime
 import pandas as pd
 from io import StringIO
@@ -32,15 +33,16 @@ class search_storm_data:
     get_storm_data():
         Decode the response from the GET request to a text file and return it as a pandas dataframe.
     """
-
-    def __init__(self, date, state):
+    def __init__(self, start_date, end_date, state):
         """
         Constructs all the necessary attributes for the search_storm_data object.
 
         Parameters
         ----------
-            date : datetime
-                the data's date (year, month, day) in datetime format e.g. datetime.datetime(year = YEAR, month = 1, day = 1)
+            start_date : datetime
+                the data's start date (year, month, day) in datetime format e.g. datetime.datetime(year = 2000, month = 1, day = 1)
+            end_date : datetime
+                the data's end date (year, month, day) in datetime format e.g. datetime.datetime(year = 2000, month = 12, day = 31)
             state : str
                 US State in FIPS%2STATENAME format e.g. 1%2CALABAMA
             url : str
@@ -54,8 +56,11 @@ class search_storm_data:
                 The storm data in raw text format obtained through the HTTP GET
         """
 
-        self.date = date
-        begin_mm, begin_dd, begin_yyyy = end_mm, end_dd, end_yyyy = self.date.strftime("%m"), self.date.strftime("%d"), self.date.strftime("%Y")
+        self.start_date = start_date
+        self.end_date = end_date
+
+        begin_mm, begin_dd, begin_yyyy = self.start_date.strftime("%m"), self.start_date.strftime("%d"), self.start_date.strftime("%Y")
+        end_mm, end_dd, end_yyyy = self.end_date.strftime("%m"), self.end_date.strftime("%d"), self.end_date.strftime("%Y")
 
         self.url = "https://www.ncdc.noaa.gov/stormevents/csv"
 
@@ -120,8 +125,7 @@ class search_storm_data:
         response_text_file = self.response.content.decode('UTF-8')
         if len(response_text_file) > 0: # check if the raw text file is empty or not
             data = pd.read_csv(StringIO(response_text_file), sep=",")
-            if data.shape[0] == 500: # gives warning if the data is exactly 500 rows
-                warnings.warn(f'{self.date} DATA IS EXACTLY 500 ROWS')
+
             return data
         else:
             # returns empty pandas dataframe if the text file is empty
@@ -141,15 +145,15 @@ class get_periodical_storm_events_data:
 
     Methods
     -------
-    get_annual_storm_data():
-        Returns the annual storm events data.
-    save_annual_storm_data():
-        Query the annual storm data and save the annual storm data in CSV format.
+    get_daily_storm_data():
+        Returns the daily storm events data.
+    get_monthly_storm_data():
+        Returns the monthly storm events data.
     """
 
     def __init__(self, year: int, state: str):
         """
-        Constructs all the necessary attributes to obtain the annual storm evebts data.
+        Constructs all the necessary attributes to obtain the annual storm events data.
 
         Parameters
         ----------
@@ -166,73 +170,207 @@ class get_periodical_storm_events_data:
     def get_annual_storm_data(self):
         """
         Returns the annual storm events data.
-        Loops the get_storm_data method to obtain the concatenated daily data. Checks the HTTP status code for every month in the process.
-
+        Loops through each month of the year to obtain and concatenate monthly data.
         Returns
         -------
-        data : pandas dataframe
-            The queried annual storm events data
+        If everything goes smoothly
+            data : pandas dataframe
+                The queried annual storm events data
+        Else
+            False : bool
         """
-        date = datetime.datetime(year = self.year, month = 1, day = 1)
-        state_fips = self.noaa_statefips[self.noaa_statefips["state_area"] == self.state]["statefips"].values[0]
+        tic = time.perf_counter()
+
+        print(f"Getting {self.state} data from {self.year}\n")
+        get_periodical_data = get_periodical_storm_events_data(year = self.year, state = self.state)
 
         data = pd.DataFrame()
-        pre_month = 0
+
+        for i in range(1, 13):  # loop through each month of the year
+            monthly_data = self.get_monthly_storm_data(month = i)
+
+            if type(monthly_data) == pd.DataFrame: # check if the returned content is a dataframe
+                data = pd.concat([data, monthly_data])
+
+            elif type(monthly_data) == int and monthly_data == 500: # otherwise, return False
+                toc = time.perf_counter()
+                print(f"\n{self.state} {self.year} data encountered query limit. Time passed: {((toc - tic) / 60):0.1f} minutes")
+
+                return False
+
+        toc = time.perf_counter()
+        print(f"\nQueried {self.state} {self.year} data in {((toc - tic) / 60):0.1f} minutes")
+
+        return data
 
 
-        while (date < datetime.datetime(year = self.year, month = 12, day = 31)):
-            # loop and concatenate daily data until the annual data is obtained
-            if date.strftime("%m") != pre_month:
-                print(f"...retrieving {self.state} data from {date.strftime('%B %Y')}...")
-                monthly_http_status_code =  search_storm_data(date = date, state = state_fips)
-
-                while monthly_http_status_code.response.status_code != 200: # check if database is ready. checked every month to reduce query time.
-                    print("HTTP status code is not ready for query, retrying in 5 seconds...")
-                    time.sleep(5)
-                    monthly_http_status_code = search_storm_data(date = date, state=state_fips)
-                    print(f"HTTP STATUS {monthly_http_status_code.response.status_code}: {http.client.responses[monthly_http_status_code.response.status_code]}")
-
-                print(f"HTTP STATUS {monthly_http_status_code.response.status_code}: {http.client.responses[monthly_http_status_code.response.status_code]}")
-                pre_month = date.strftime("%m")
-
-            data = pd.concat([data, search_storm_data(date = date, state = state_fips).get_storm_data()])
-            date += datetime.timedelta(days=1)
-
-        return data.reset_index(drop = True)
-
-    def save_annual_storm_data(self, folder = "./") -> None:
+    def get_monthly_storm_data(self, month: int):
         """
-        Query the annual storm data and save the annual storm data in CSV format.
+        Returns the monthly storm events data.
+        Calls get_storm_data method to obtain the concatenated monthly data. Checks the daily HTTP status code in the process. Status code is always 100 in the beginning.
 
         Parameters
         ----------
+        month : int
+            The queried month
+
+        Returns
+        -------
+        If data is less than 500 rows
+            data : pandas dataframe
+                The queried annual storm events data
+        If data has 500 rows or more
+            500 : int
+        """
+        m_range = calendar.monthrange(year = self.year, month = month) # get that month's beginning date and last date
+
+        start_date = datetime.datetime(year = self.year, month = month, day = 1) # start date is always first day of the month
+        end_date = datetime.datetime(year = self.year, month = month, day = m_range[1])
+
+        state_fips = self.noaa_statefips[self.noaa_statefips["state_area"] == self.state]["statefips"].values[0]
+
+        data = pd.DataFrame()
+
+        print(f"...retrieving monthly {self.state} data from {start_date.strftime('%B %Y')}...")
+        status_code = 100
+
+        while status_code != 200: # check if database HTTP status is ready
+            print(f"HTTP STATUS {status_code}: {http.client.responses[status_code]}")
+            print("HTTP status code is not ready for query, retrying in 0.5 seconds...") # initial time delay is shorter for monthly query
+            time.sleep(0.5)
+            monthly_storm_data_request = search_storm_data(start_date = start_date, end_date = end_date, state = state_fips)
+            status_code = monthly_storm_data_request.response.status_code
+
+        print(f"HTTP STATUS {status_code}: {http.client.responses[status_code]}")
+
+        data = pd.concat([data, monthly_storm_data_request.get_storm_data()])
+
+        if data.shape[0] < 500:
+            return data.reset_index(drop = True)
+
+        elif data.shape[0] >= 500:  # gives warning if the data has 500 rows or more
+            print("MONTHLY DATA HAS 500 ROWS OR MORE, RE-QUERYING USING DAILY DATA REQUEST")
+
+            data = pd.DataFrame()
+            for i in range(1, m_range[1] + 1): # loops the daily data 1 by one
+                daily_data = self.get_daily_storm_data(month = month, day = i)
+
+                if type(daily_data) == pd.DataFrame: # check if the returned content is a dataframe
+                    data = pd.concat([data, daily_data])
+
+                elif type(daily_data) == int and daily_data == 500:  # otherwise, return False
+                    print(f"\n{self.state} {self.year} daily data encountered query limit")
+
+                    return 500
+
+
+            return data.reset_index(drop = True)
+
+    def get_daily_storm_data(self, month : int, day : int):
+        """
+        Returns the daily storm events data.
+        Calls get_storm_data method to obtain the concatenated daily data. Checks the daily HTTP status code in the process. Status code is always 100 in the beginning.
+
+        Parameters
+        ----------
+        month : int
+            The queried month of the day
+
+        day : int
+            The queried day
+
+        Returns
+        -------
+        If data is less than 500 rows
+            data : pandas dataframe
+                The queried annual storm events data
+        If data has 500 rows or more
+            500 : int
+        """
+        date = datetime.datetime(year = self.year, month = month, day = day) # since this method queries daily data so the start date and end date are the same
+        state_fips = self.noaa_statefips[self.noaa_statefips["state_area"] == self.state]["statefips"].values[0]
+
+        data = pd.DataFrame()
+
+        print(f"...retrieving daily {self.state} data from {date.strftime('%d %B %Y')}...")
+        status_code = 100
+
+        while status_code != 200: # check if database HTTP status is ready
+            print(f"HTTP STATUS {status_code}: {http.client.responses[status_code]}")
+            print("HTTP status code is not ready for query, retrying in 1 seconds...")
+            time.sleep(1)
+            daily_storm_data_request = search_storm_data(start_date = date, end_date = date, state=state_fips)
+            status_code = daily_storm_data_request.response.status_code
+
+        print(f"HTTP STATUS {status_code}: {http.client.responses[status_code]}")
+
+        data = pd.concat([data, daily_storm_data_request.get_storm_data()])
+
+        if data.shape[0] < 500:
+            return data.reset_index(drop = True)
+
+        elif data.shape[0] == 500: # gives warning if the data is exactly 500 rows
+            warnings.warn(f'DAILY DATA HAS 500 ROWS')
+            print("WARNING: DAILY DATA HAS 500 ROWS")
+
+            return 500
+
+        else:
+            warnings.warn(f'DAILY DATA HAS MORE THAN 500 ROWS')
+            print("WARNING: DAILY DATA HAS MORE THAN 500 ROWS")
+
+            return 500
+
+
+class save_storm_data:
+    """
+    This class saves the data with a given state and time in CSV format.
+    WARNING: can take forever.
+
+    Attributes
+    ----------
+    states: list[str]
+        list of all states in the US
+
+    Methods
+    -------
+    save_annual_storm_data():
+        This method loops through annual storm events data from all states from a given list of year(s).
+    save_annual_storm_data_multi_states():
+        This method calls the get_periodical_storm_events_data class and queries the annual data to and saves it into a pre-deretmined folder.
+    """
+    def __init__(self):
+        """
+        Constructs all the necessary attributes to save storm events data.
+        """
+        # load an array of states from the reference file
+        self.states = pd.read_json("reference_data/counties_list.json")["State"].unique()
+
+
+    def save_annual_storm_data(self, year: int, state: str, folder = ".") -> None:
+        """
+        This method calls the get_periodical_storm_events_data class and queries the annual data to and saves it into a pre-deretmined folder.
+
+        Parameters
+        ----------
+        year : int
+        state : str
         folder : str, optional
             The folder to store the saved csv data. Saved in the main directory as default.
+
         Returns
         -------
         None
         """
-        filename = f"{folder}{self.state}_storm_events_{self.year}.csv"
+        filename = f"{folder}/{state}_storm_events_{year}.csv"
 
-        tic = time.perf_counter()
-
-        data = self.get_annual_storm_data()
+        get_periodical_data = get_periodical_storm_events_data(year = year, state = state)
+        data = get_periodical_data.get_annual_storm_data()
         data.to_csv(filename, index = False)
+        print(f"\nDownloaded {state} {year} data in {folder} folder")
 
-        toc = time.perf_counter()
-        print(f"\nDownloaded {self.state} {self.year} data in {((toc - tic) / 60):0.1f} minutes")
 
-class get_all_states_data:
-    """
-    This class gets the periodical storm events data for all States.
-    WARNING: can take forever.
-
-    Methods
-    -------
-    get_annual data():
-        This method loops through annual storm events data from all states from a given list of year(s).
-    """
-    def get_annual_data(self, years: list[int], folder = "./"):
+    def save_annual_storm_data_multi_states(self, years: list[int], states = None, folder = ".") -> None:
         """
         This method loops through annual storm events data from all states from a given list of year(s).
         Then the annual data is saved in a specified folder. It also tells how long it takes to query the annual data from a given state.
@@ -242,6 +380,8 @@ class get_all_states_data:
         years : list
             List all the year(s) to be queried.
             RECOMMENDATION: query 1 year at a time e.g. [2008] to prevent large files.
+        states : list, optional
+            List of states to be queried e.g. ["ALABAMA", "FLORIDA"], by default the method will query all states
         folder : str, optional
             The folder to store the saved csv data. Saved in the main directory as default.
 
@@ -249,8 +389,9 @@ class get_all_states_data:
         -------
         None
         """
-        # load an array of states from the reference file
-        states = pd.read_json("reference_data/counties_list.json")["State"].unique()
+        if states == None:
+            states = self.states
+
         time_taken_lst = []
 
         for i, year in enumerate(years):
@@ -258,7 +399,7 @@ class get_all_states_data:
                 tic = time.perf_counter()
 
                 print(f"Getting {state} ({j + 1}/ {len(states)}) data from {year} ({j + 1}/ {len(years)})\n")
-                get_periodical_storm_events_data(year = year, state = state).save_annual_storm_data(folder = folder)
+                self.save_annual_storm_data(year = year, state = state, folder = folder)
 
                 toc = time.perf_counter()
 
