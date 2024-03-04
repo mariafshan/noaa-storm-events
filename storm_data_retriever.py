@@ -398,7 +398,7 @@ class save_storm_data:
             for j, state in enumerate(states):
                 tic = time.perf_counter()
 
-                print(f"Getting {state} ({j + 1}/ {len(states)}) data from {year} ({j + 1}/ {len(years)})\n")
+                print(f"Getting {state} ({j + 1}/ {len(states)}) data from {year} ({i + 1}/ {len(years)})\n")
                 self.save_annual_storm_data(year = year, state = state, folder = folder)
 
                 toc = time.perf_counter()
