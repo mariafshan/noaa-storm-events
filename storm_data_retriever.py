@@ -98,7 +98,7 @@ class search_storm_data:
         None
         """
 
-        print(date.strftime("%B %d, %Y"))
+        print(self.start_date.strftime("%B %d, %Y"))
         print("=============HTTP STATUS=============")
         print(f"HTTP STATUS {self.response.status_code}: {http.client.responses[self.response.status_code]}")
         print(f"URL: {self.response.url}\n")
@@ -124,9 +124,26 @@ class search_storm_data:
         """
         response_text_file = self.response.content.decode('UTF-8')
         if len(response_text_file) > 0: # check if the raw text file is empty or not
-            data = pd.read_csv(StringIO(response_text_file), sep=",")
+            try:
+                data = pd.read_csv(StringIO(response_text_file), sep=",")
+                return data
 
-            return data
+            except:
+                # There is a super annoying bug in the "EVENT_NARRATIVE" and "EPISODE_NARRATIVE" columns where if the text contains ',' then it adds extra columns due to comma separation
+                # In such case, then I have to manually use string manipulation to fix the comma issues.
+                print("Fixing mismatched number of columns issues\n.........")
+                columns = response_text_file.split("\n")[0].split(",")
+
+                data = pd.DataFrame()
+                for line in response_text_file.split("\n")[1:]:
+                    txt_split = line.split(",")
+                    data = pd.concat(
+                        [data, pd.DataFrame(txt_split[:36] + [" ".join(txt_split[36:-2])] + txt_split[-2:]).T])
+
+                data.columns = columns
+                return data
+
+
         else:
             # returns empty pandas dataframe if the text file is empty
             return pd.DataFrame()
@@ -149,6 +166,8 @@ class get_periodical_storm_events_data:
         Returns the daily storm events data.
     get_monthly_storm_data():
         Returns the monthly storm events data.
+    get_monthly_storm_data_brute_force():
+        Query monthly storm events data through daily requests. Use only if the regular monthly request does not work.
     """
 
     def __init__(self, year: int, state: str):
@@ -216,7 +235,7 @@ class get_periodical_storm_events_data:
 
         Returns
         -------
-        If data is less than 500 rows
+        If data has less than 500 rows
             data : pandas dataframe
                 The queried annual storm events data
         If data has 500 rows or more
@@ -243,28 +262,58 @@ class get_periodical_storm_events_data:
 
         print(f"HTTP STATUS {status_code}: {http.client.responses[status_code]}")
 
-        data = pd.concat([data, monthly_storm_data_request.get_storm_data()])
+        try:
+            data = pd.concat([data, monthly_storm_data_request.get_storm_data()])
+            if data.shape[0] < 500:
+                return data.reset_index(drop=True)
 
-        if data.shape[0] < 500:
-            return data.reset_index(drop = True)
+            elif data.shape[0] >= 500:  # gives warning if the data has 500 rows or more
+                print("MONTHLY DATA HAS 500 ROWS OR MORE, RE-QUERYING USING DAILY DATA REQUEST")
 
-        elif data.shape[0] >= 500:  # gives warning if the data has 500 rows or more
-            print("MONTHLY DATA HAS 500 ROWS OR MORE, RE-QUERYING USING DAILY DATA REQUEST")
+                data = self.get_monthly_storm_data_brute_force(month = month, last_day = m_range[1])
 
-            data = pd.DataFrame()
-            for i in range(1, m_range[1] + 1): # loops the daily data 1 by one
-                daily_data = self.get_daily_storm_data(month = month, day = i)
+                return data
+        except:
+            print("ERROR ENCOUNTERED FROM MONTHLY QUERYING THE NOAA DATABASE, RE-QUERYING USING DAILY DATA REQUEST")
 
-                if type(daily_data) == pd.DataFrame: # check if the returned content is a dataframe
-                    data = pd.concat([data, daily_data])
-
-                elif type(daily_data) == int and daily_data == 500:  # otherwise, return False
-                    print(f"\n{self.state} {self.year} daily data encountered query limit")
-
-                    return 500
+            data = self.get_monthly_storm_data_brute_force(month = month, last_day = m_range[1])
+            return data
 
 
-            return data.reset_index(drop = True)
+    def get_monthly_storm_data_brute_force(self, month: int, last_day: int):
+        """
+        Query monthly storm events data through daily requests.
+        Use only if there is an error querying storm events data by month as the NOAA website does not like multiple queries in a short period of time.
+
+        Parameters
+        ----------
+        month : int
+            The queried month
+        last_day : int
+            Last day of the month
+
+        Returns
+        -------
+        If data has less than 500 rows
+            data : pandas dataframe
+                The queried annual storm events data
+        If data has 500 rows or more
+            500 : int
+        """
+        data = pd.DataFrame()
+        for i in range(1, last_day + 1):  # loops the daily data 1 by one
+            daily_data = self.get_daily_storm_data(month=month, day=i)
+
+            if type(daily_data) == pd.DataFrame:  # check if the returned content is a dataframe
+                data = pd.concat([data, daily_data])
+
+            elif type(daily_data) == int and daily_data == 500:  # otherwise, return False
+                print(f"\n{self.state} {self.year} daily data encountered query limit")
+
+                return 500
+
+        return data.reset_index(drop = True)
+
 
     def get_daily_storm_data(self, month : int, day : int):
         """
