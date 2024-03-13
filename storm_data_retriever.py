@@ -9,6 +9,7 @@ from urllib.request import urlretrieve
 import requests
 
 import time
+import os
 
 
 class search_storm_data:
@@ -457,7 +458,11 @@ class save_storm_data:
         -------
         None
         """
-        filename = f"{folder}/{state}_storm_events_{year}.csv"
+        path = f"{folder}/{year}/"
+        filename = f"{path}{state}_storm_events_{year}.csv"
+
+        if not os.path.exists(path): # create folder if folder does not exist
+            os.makedirs(path)
 
         get_periodical_data = get_periodical_storm_events_data(year = year, state = state)
         data = get_periodical_data.get_annual_storm_data()
@@ -503,3 +508,5 @@ class save_storm_data:
                 average_time = sum(time_taken_lst) / len(time_taken_lst)
                 estimated_time_seconds = (average_time * ((len(states) - j - 1) + (len(states) * (len(years) - i - 1))))
                 print(f"\nEstimated time left before completion {(estimated_time_seconds / 60): 0.1f} minutes or {(estimated_time_seconds / 3600): 0.1f} hours\n")
+
+            time.sleep(60) # wait 1 minute before querying the next year
