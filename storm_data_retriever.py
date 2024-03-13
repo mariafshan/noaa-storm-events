@@ -30,6 +30,8 @@ class search_storm_data:
         Print the content of the retrieved url.
     check_http_status():
         Print the HTTP status of the GET request.
+    preprocess_raw_storm_text_data():
+        Clean the raw text response to fit the dataframe table
     get_storm_data():
         Decode the response from the GET request to a text file and return it as a pandas dataframe.
     """
@@ -107,6 +109,59 @@ class search_storm_data:
         for k, v in self.query_parameters.items():
             print(f"{k} = {v}")
 
+    def preprocess_raw_storm_text_data(self, text: str):
+        """
+        Preprocess the text by iterating each line of text. If the line is a full row, then immediately convert the line into dataframe and concatenate the line into the dataframe. If not, then multiple lines that consist of the beginning until the ending line is combined first.
+        Parameters
+        ----------
+        text : str
+            The text file obtained from NOAA database website
+
+        Returns
+        -------
+        data : Dataframe
+            the preprocessed text file already in dataframe format
+
+        """
+        txt_split = text.split("\n") # split the text into multiple lines
+        columns = txt_split[0].split(",") # obtain columns
+        txt_split = txt_split[1:] # obtain just the content and not the columns
+        data = pd.DataFrame(columns = range(39))  # create empty dataframe with 39 columns
+
+        # group the lines idx to identify whether the line is a complete row, incomplete row, or the end of a row
+        full_line = []
+        line_incomplete = []
+        line_ending = []
+
+        for i in range(len(txt_split)):
+            line = txt_split[i].split(",")
+            if line[0].isdigit() and line[-1].isdigit():  # check if line is a full row
+                full_line.append(i)
+            elif line[0].isdigit() and line[-1].isdigit() == False:  # check if line is incomplete
+                line_incomplete.append(i)
+            elif line[-1].isdigit():  # check if line is the ending
+                line_ending.append(i)
+
+        # obtain the full index of both complete and incomplete rows to be processed
+        rows_index_lst = full_line + line_incomplete
+        rows_index_lst.sort()
+
+        for i in rows_index_lst:
+            if i in full_line: # immediately convert line into dataframe since no preprocessing is needed
+                line = txt_split[i].split(",")
+                line = pd.DataFrame(line[:37] + [" ".join(line[37:-1])] + line[-1:]).T
+                data = pd.concat([data, line]).reset_index(drop=True)
+
+            elif i in line_incomplete: # preprocess the line by combining multiple lines to form the full rows
+                ending_idx = line_ending[line_incomplete.index(i)]
+                line = txt_split[i: ending_idx + 1]
+                line = ",".join(line).split(",")
+                line = pd.DataFrame(line[:37] + [" ".join(line[37:-1])] + line[-1:]).T
+                data = pd.concat([data, line]).reset_index(drop=True)
+
+        data.columns = columns
+        return data
+
 
     def get_storm_data(self):
         """
@@ -132,17 +187,8 @@ class search_storm_data:
                 # There is a super annoying bug in the "EVENT_NARRATIVE" and "EPISODE_NARRATIVE" columns where if the text contains ',' then it adds extra columns due to comma separation
                 # In such case, then I have to manually use string manipulation to fix the comma issues.
                 print("Fixing mismatched number of columns issues\n.........")
-                columns = response_text_file.split("\n")[0].split(",")
 
-                data = pd.DataFrame()
-                for line in response_text_file.split("\n")[1:]:
-                    txt_split = line.split(",")
-                    data = pd.concat(
-                        [data, pd.DataFrame(txt_split[:36] + [" ".join(txt_split[36:-2])] + txt_split[-2:]).T])
-
-                data.columns = columns
-                return data
-
+                return self.preprocess_raw_storm_text_data(text = response_text_file)
 
         else:
             # returns empty pandas dataframe if the text file is empty
