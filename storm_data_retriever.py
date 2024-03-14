@@ -181,14 +181,14 @@ class search_storm_data:
         response_text_file = self.response.content.decode('UTF-8')
         if len(response_text_file) > 0: # check if the raw text file is empty or not
             try:
-                data = pd.read_csv(StringIO(response_text_file), sep=",")
-                return data
+                data = pd.read_csv(StringIO(response_text_file), sep=",", index_col = False)
+                return data.reset_index(drop = True)
+
 
             except:
                 # There is a super annoying bug in the "EVENT_NARRATIVE" and "EPISODE_NARRATIVE" columns where if the text contains ',' then it adds extra columns due to comma separation
                 # In such case, then I have to manually use string manipulation to fix the comma issues.
                 print("Fixing mismatched number of columns issues\n.........")
-
                 return self.preprocess_raw_storm_text_data(text = response_text_file)
 
         else:
